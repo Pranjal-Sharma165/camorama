@@ -1,9 +1,9 @@
 import 'dart:html';
 import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  // Create video and canvas globally
   final video = VideoElement()
     ..style.width = '100%'
     ..style.height = '100%'
@@ -12,14 +12,12 @@ void main() {
 
   final canvas = CanvasElement();
 
-  // Start the camera
   window.navigator.mediaDevices?.getUserMedia({'video': true}).then((stream) {
     video.srcObject = stream;
   }).catchError((e) {
     print('Error accessing webcam: $e');
   });
 
-  // Register the video element
   ui.platformViewRegistry.registerViewFactory('cameraPreview', (int viewId) => video);
 
   runApp(MyApp(video: video, canvas: canvas));
@@ -37,8 +35,23 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? capturedImageDataUrl;
+  int? countdown;
+  final FocusNode _focusNode = FocusNode();
 
-  void capturePicture() {
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.requestFocus();
+  }
+
+  Future<void> capturePicture() async {
+    for (int i = 3; i > 0; i--) {
+      setState(() => countdown = i);
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
+    setState(() => countdown = null);
+
     widget.canvas.width = widget.video.videoWidth;
     widget.canvas.height = widget.video.videoHeight;
 
@@ -61,31 +74,58 @@ class _MyAppState extends State<MyApp> {
           centerTitle: true,
           backgroundColor: Colors.deepPurple,
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: HtmlElementView(viewType: 'cameraPreview'),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: ElevatedButton(
-                onPressed: capturePicture,
-                child: const Text('Capture Picture'),
-              ),
-            ),
-            if (capturedImageDataUrl != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Image.network(
-                  capturedImageDataUrl!,
-                  width: 200,
-                  height: 300,
+        body: RawKeyboardListener(
+          focusNode: _focusNode,
+          autofocus: true,
+          onKey: (RawKeyEvent event) {
+            if (event.runtimeType == RawKeyDownEvent &&
+                event.logicalKey == LogicalKeyboardKey.enter) {
+              capturePicture();
+            }
+          },
+          child: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      HtmlElementView(viewType: 'cameraPreview'),
+                      if (countdown != null)
+                        Container(
+                          color: Colors.black45,
+                          child: Text(
+                            '$countdown',
+                            style: const TextStyle(
+                              fontSize: 100,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: ElevatedButton(
+                  onPressed: capturePicture,
+                  child: const Text('Capture Picture'),
+                ),
+              ),
+              if (capturedImageDataUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Image.network(
+                    capturedImageDataUrl!,
+                    width: 200,
+                    height: 300,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
