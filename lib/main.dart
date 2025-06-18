@@ -34,8 +34,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String? capturedImageDataUrl;
+  // String? capturedImageDataUrl;
+  List<String> capturedImages = [];
   int? countdown;
+  final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -61,7 +63,7 @@ class _MyAppState extends State<MyApp> {
     final dataUrl = widget.canvas.toDataUrl('image/png');
 
     setState(() {
-      capturedImageDataUrl = dataUrl;
+      capturedImages.add(dataUrl);
     });
   }
 
@@ -93,8 +95,7 @@ class _MyAppState extends State<MyApp> {
                     children: [
                       HtmlElementView(viewType: 'cameraPreview'),
                       if (countdown != null)
-                        Container(
-                          color: Colors.black45,
+                        Center(
                           child: Text(
                             '$countdown',
                             style: const TextStyle(
@@ -115,13 +116,26 @@ class _MyAppState extends State<MyApp> {
                   child: const Text('Capture Picture'),
                 ),
               ),
-              if (capturedImageDataUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Image.network(
-                    capturedImageDataUrl!,
-                    width: 200,
-                    height: 300,
+              if (capturedImages.isNotEmpty)
+                SizedBox(
+                  height: 120,
+                  child: Scrollbar(
+                    controller: _scrollController,
+                    thumbVisibility: true,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: capturedImages.length,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Image.network(
+                          capturedImages[index],
+                          width: 160,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -129,5 +143,11 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }
