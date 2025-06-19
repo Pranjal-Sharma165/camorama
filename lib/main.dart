@@ -117,24 +117,20 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               if (capturedImages.isNotEmpty)
-                SizedBox(
-                  height: 120,
-                  child: Scrollbar(
-                    controller: _scrollController,
-                    thumbVisibility: true,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: capturedImages.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Image.network(
-                          capturedImages[index],
-                          width: 160,
-                          height: 120,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 4 / 3,
+                      children: capturedImages.map((imageUrl) {
+                        return Image.network(
+                          imageUrl,
                           fit: BoxFit.cover,
-                        ),
-                      ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
