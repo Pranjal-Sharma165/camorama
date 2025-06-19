@@ -34,10 +34,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // String? capturedImageDataUrl;
   List<String> capturedImages = [];
   int? countdown;
-  final ScrollController _scrollController = ScrollController();
+  bool showCollage = false;
+  String? selectedImage;
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -64,7 +64,29 @@ class _MyAppState extends State<MyApp> {
 
     setState(() {
       capturedImages.add(dataUrl);
+      selectedImage = dataUrl;
     });
+  }
+
+  Widget collageWidget() {
+    final collageImages = capturedImages.take(3).toList();
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: collageImages
+            .map((img) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Image.network(
+                    img,
+                    width: 120,
+                    height: 160,
+                    fit: BoxFit.cover,
+                  ),
+                ))
+            .toList(),
+      ),
+    );
   }
 
   @override
@@ -87,13 +109,35 @@ class _MyAppState extends State<MyApp> {
           },
           child: Column(
             children: [
+              const SizedBox(height: 10),
+              const Text(
+                'If you are done with your images, click here:',
+                style: TextStyle(fontSize: 16),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (capturedImages.length >= 3) {
+                    setState(() {
+                      showCollage = true;
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Capture at least 3 images for a collage.')),
+                    );
+                  }
+                },
+                child: const Text('Click'),
+              ),
               Expanded(
+                flex: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      HtmlElementView(viewType: 'cameraPreview'),
+                      showCollage
+                          ? collageWidget()
+                          : HtmlElementView(viewType: 'cameraPreview'),
                       if (countdown != null)
                         Center(
                           child: Text(
@@ -118,19 +162,39 @@ class _MyAppState extends State<MyApp> {
               ),
               if (capturedImages.isNotEmpty)
                 Expanded(
+                  flex: 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                    child: GridView.count(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 4 / 3,
-                      children: capturedImages.map((imageUrl) {
-                        return Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: GridView.builder(
+                      itemCount: capturedImages.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 4 / 3,
+                      ),
+                      itemBuilder: (context, index) {
+                        final img = capturedImages[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedImage = img;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: selectedImage == img ? Colors.deepPurple : Colors.transparent,
+                                width: 3,
+                              ),
+                            ),
+                            child: Image.network(
+                              img,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         );
-                      }).toList(),
+                      },
                     ),
                   ),
                 ),
@@ -143,7 +207,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
   }
 }
