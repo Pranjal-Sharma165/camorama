@@ -34,7 +34,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
   List<String> capturedImages = [];
+  List<String> selectedForCollage = [];
   int? countdown;
   bool showCollage = false;
   String? selectedImage;
@@ -69,7 +72,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget collageWidget() {
-    final collageImages = capturedImages.take(3).toList();
+    final collageImages = selectedForCollage;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -92,6 +95,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Camorama'),
@@ -116,13 +120,13 @@ class _MyAppState extends State<MyApp> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (capturedImages.length >= 3) {
+                  if (selectedForCollage.length == 3) {
                     setState(() {
                       showCollage = true;
                     });
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Capture at least 3 images for a collage.')),
+                    scaffoldMessengerKey.currentState?.showSnackBar(
+                      const SnackBar(content: Text('Select exactly 3 images for the collage.')),
                     );
                   }
                 },
@@ -179,12 +183,25 @@ class _MyAppState extends State<MyApp> {
                           onTap: () {
                             setState(() {
                               selectedImage = img;
+                              if (selectedForCollage.contains(img)) {
+                                selectedForCollage.remove(img);
+                              } else {
+                                if (selectedForCollage.length < 3) {
+                                  selectedForCollage.add(img);
+                                } else {
+                                  scaffoldMessengerKey.currentState?.showSnackBar(
+                                    const SnackBar(content: Text('You can select up to 3 images for the collage.')),
+                                  );
+                                }
+                              }
                             });
                           },
                           child: Container(
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: selectedImage == img ? Colors.deepPurple : Colors.transparent,
+                                color: selectedForCollage.contains(img)
+                                    ? Colors.green
+                                    : (selectedImage == img ? Colors.deepPurple : Colors.transparent),
                                 width: 3,
                               ),
                             ),
