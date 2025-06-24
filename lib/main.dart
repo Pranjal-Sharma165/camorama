@@ -20,20 +20,35 @@ void main() {
 
   ui.platformViewRegistry.registerViewFactory('cameraPreview', (int viewId) => video);
 
-  runApp(MyApp(video: video, canvas: canvas));
+  runApp(MyAppRoot(video: video, canvas: canvas));
 }
 
-class MyApp extends StatefulWidget {
+class MyAppRoot extends StatelessWidget {
   final VideoElement video;
   final CanvasElement canvas;
 
-  const MyApp({Key? key, required this.video, required this.canvas}) : super(key: key);
+  const MyAppRoot({Key? key, required this.video, required this.canvas}) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Camorama',
+      home: HomePage(video: video, canvas: canvas),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class HomePage extends StatefulWidget {
+  final VideoElement video;
+  final CanvasElement canvas;
+
+  const HomePage({Key? key, required this.video, required this.canvas}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   List<String> capturedImages = [];
@@ -42,11 +57,43 @@ class _MyAppState extends State<MyApp> {
   bool showCollage = false;
   String? selectedImage;
   final FocusNode _focusNode = FocusNode();
+  bool _dialogShown = false;
 
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_dialogShown) {
+      _dialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('How to Use'),
+              content: const Text(
+                '• Press Enter or tap "Capture Picture" to take a photo.\n'
+                '• Click on images at the bottom to select up to 3.\n'
+                '• Tap the "Click" button to view the collage.\n\n'
+                'Tip: Click the same image again to unselect it.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Got it!'),
+                ),
+              ],
+            );
+          },
+        );
+      });
+    }
   }
 
   Future<void> capturePicture() async {
@@ -94,9 +141,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      scaffoldMessengerKey: scaffoldMessengerKey,
-      home: Scaffold(
+    return ScaffoldMessenger(
+      key: scaffoldMessengerKey,
+      child: Scaffold(
         appBar: AppBar(
           title: const Text('Camorama'),
           centerTitle: true,
@@ -224,6 +271,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     super.dispose();
   }
 }
