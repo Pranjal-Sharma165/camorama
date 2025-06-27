@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() {
   final video = VideoElement()
@@ -58,8 +59,11 @@ class _HomePageState extends State<HomePage> {
   bool showCollage = false;
   bool collageCreated = false;
   String? selectedImage;
+
   final FocusNode _focusNode = FocusNode();
   bool _dialogShown = false;
+
+  Color selectedBorderColor = Colors.black;
 
   @override
   void initState() {
@@ -83,7 +87,8 @@ class _HomePageState extends State<HomePage> {
                 '• Press Enter or tap "Capture Picture" to take a photo.\n'
                 '• Click on images at the bottom to select up to 3.\n'
                 '• Tap "Click" to preview the collage.\n'
-                '• Then tap "Create Collage" to finalize the collage.\n\n'
+                '• Then tap "Create Collage" to finalize the collage.\n'
+                '• Change border colors using the buttons.\n\n'
                 'Tip: Click the same image again to unselect it.',
               ),
               actions: [
@@ -121,27 +126,35 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Widget framedImage(String img) {
+    BoxDecoration decoration = BoxDecoration(
+      border: Border.all(color: selectedBorderColor, width: 8),
+    );
+
+    return Container(
+      decoration: decoration,
+      margin: const EdgeInsets.all(8),
+      child: Image.network(
+        img,
+        width: 200,
+        height: 260,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   Widget collageWidget() {
     return Center(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: selectedForCollage.map((img) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Image.network(
-                img,
-                width: 200,
-                height: 260,
-                fit: BoxFit.cover,
-              ),
-            );
+            return framedImage(img);
           }).toList(),
         ),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +222,74 @@ class _HomePageState extends State<HomePage> {
                     ),
                 ],
               ),
+
+              // Border color selection
+              if (showCollage)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedBorderColor = Colors.black;
+                          });
+                        },
+                        child: const Text('Black'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedBorderColor = Colors.white;
+                          });
+                        },
+                        child: const Text('White'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          Color tempColor = selectedBorderColor;
+                          Color? pickedColor = await showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('Select Border Color'),
+                                content: SingleChildScrollView(
+                                  child: ColorPicker(
+                                    pickerColor: tempColor,
+                                    onColorChanged: (color) {
+                                      tempColor = color;
+                                    },
+                                    showLabel: true,
+                                    pickerAreaHeightPercent: 0.8,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.of(context).pop(tempColor),
+                                    child: const Text('Select'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (pickedColor != null) {
+                            setState(() {
+                              selectedBorderColor = pickedColor;
+                            });
+                          }
+                        },
+                        child: const Text('Custom'),
+                      ),
+                    ],
+                  ),
+                ),
+
               Expanded(
                 flex: 2,
                 child: Padding(

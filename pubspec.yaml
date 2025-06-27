@@ -9,6 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_colorpicker: ^1.0.3
+
   camera: ^0.10.0+4
   camera_web: ^0.3.5    # UPDATED camera_web version to latest stable (fixes platformViewRegistry issue)
   flutter_web_plugins:
