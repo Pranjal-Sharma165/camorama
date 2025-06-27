@@ -16,6 +16,7 @@ void main() {
     video.srcObject = stream;
   }).catchError((e) {
     print('Error accessing webcam: $e');
+    window.alert('Failed to access webcam. Please check permissions and reload the page.');
   });
 
   ui.platformViewRegistry.registerViewFactory('cameraPreview', (int viewId) => video);
@@ -55,6 +56,7 @@ class _HomePageState extends State<HomePage> {
   List<String> selectedForCollage = [];
   int? countdown;
   bool showCollage = false;
+  bool collageCreated = false;
   String? selectedImage;
   final FocusNode _focusNode = FocusNode();
   bool _dialogShown = false;
@@ -80,7 +82,8 @@ class _HomePageState extends State<HomePage> {
               content: const Text(
                 '• Press Enter or tap "Capture Picture" to take a photo.\n'
                 '• Click on images at the bottom to select up to 3.\n'
-                '• Tap the "Click" button to view the collage.\n\n'
+                '• Tap "Click" to preview the collage.\n'
+                '• Then tap "Create Collage" to finalize the collage.\n\n'
                 'Tip: Click the same image again to unselect it.',
               ),
               actions: [
@@ -119,28 +122,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget collageWidget() {
-    final collageImages = selectedForCollage;
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: collageImages
-            .map((img) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Image.network(
-                    img,
-                    width: 120,
-                    height: 160,
-                    fit: BoxFit.cover,
-                  ),
-                ))
-            .toList(),
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: selectedForCollage.map((img) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Image.network(
+                img,
+                width: 200,
+                height: 260,
+                fit: BoxFit.cover,
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
+    if (collageCreated) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: collageWidget(),
+        ),
+      );
+    }
+
     return ScaffoldMessenger(
       key: scaffoldMessengerKey,
       child: Scaffold(
@@ -165,19 +178,36 @@ class _HomePageState extends State<HomePage> {
                 'If you are done with your images, click here:',
                 style: TextStyle(fontSize: 16),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  if (selectedForCollage.length == 3) {
-                    setState(() {
-                      showCollage = true;
-                    });
-                  } else {
-                    scaffoldMessengerKey.currentState?.showSnackBar(
-                      const SnackBar(content: Text('Select exactly 3 images for the collage.')),
-                    );
-                  }
-                },
-                child: const Text('Click'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      if (selectedForCollage.length == 3) {
+                        setState(() {
+                          showCollage = true;
+                        });
+                      } else {
+                        scaffoldMessengerKey.currentState?.showSnackBar(
+                          const SnackBar(
+                            content: Text('Select exactly 3 images for the collage.'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Click'),
+                  ),
+                  const SizedBox(width: 10),
+                  if (showCollage)
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          collageCreated = true;
+                        });
+                      },
+                      child: const Text('Create Collage'),
+                    ),
+                ],
               ),
               Expanded(
                 flex: 2,
@@ -204,14 +234,15 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: ElevatedButton(
-                  onPressed: capturePicture,
-                  child: const Text('Capture Picture'),
+              if (!showCollage)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: ElevatedButton(
+                    onPressed: capturePicture,
+                    child: const Text('Capture Picture'),
+                  ),
                 ),
-              ),
-              if (capturedImages.isNotEmpty)
+              if (capturedImages.isNotEmpty && !showCollage)
                 Expanded(
                   flex: 1,
                   child: Padding(
@@ -237,7 +268,11 @@ class _HomePageState extends State<HomePage> {
                                   selectedForCollage.add(img);
                                 } else {
                                   scaffoldMessengerKey.currentState?.showSnackBar(
-                                    const SnackBar(content: Text('You can select up to 3 images for the collage.')),
+                                    const SnackBar(
+                                      content: Text(
+                                        'You can select up to 3 images for the collage.',
+                                      ),
+                                    ),
                                   );
                                 }
                               }
@@ -248,7 +283,9 @@ class _HomePageState extends State<HomePage> {
                               border: Border.all(
                                 color: selectedForCollage.contains(img)
                                     ? Colors.green
-                                    : (selectedImage == img ? Colors.deepPurple : Colors.transparent),
+                                    : (selectedImage == img
+                                        ? Colors.deepPurple
+                                        : Colors.transparent),
                                 width: 3,
                               ),
                             ),
@@ -272,6 +309,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _focusNode.dispose();
+    final stream = widget.video.srcObject;
+    if (stream != null) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
     super.dispose();
   }
 }
