@@ -65,6 +65,7 @@ class _HomePageState extends State<HomePage> {
 
   Color selectedBorderColor = Colors.black;
   double borderThickness = 8.0;
+  double borderRadius = 0.0;
 
   @override
   void initState() {
@@ -133,13 +134,18 @@ class _HomePageState extends State<HomePage> {
     );
 
     return Container(
-      decoration: decoration,
+      decoration: decoration.copyWith(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
       margin: const EdgeInsets.all(8),
-      child: Image.network(
-        img,
-        width: 200,
-        height: 260,
-        fit: BoxFit.cover,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Image.network(
+          img,
+          width: 200,
+          height: 260,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
@@ -221,23 +227,54 @@ class _HomePageState extends State<HomePage> {
                           'Border Thickness',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Slider(
-                          min: 2.0,
-                          max: 20.0,
-                          divisions: 9,
-                          label: '${borderThickness.toInt()} px',
-                          value: borderThickness,
-                          onChanged: (value) {
-                            setState(() {
-                              borderThickness = value;
-                            });
-                          },
+                         SizedBox(
+                          width: 300, // ✅ Control the width here
+                          child: Slider(
+                            min: 1.0,
+                            max: 20.0,
+                            divisions: 19,
+                            label: '${borderThickness.toInt()} px',
+                            value: borderThickness,
+                            onChanged: (value) {
+                              setState(() {
+                                borderThickness = value;
+                              });
+                            },
+                          ),
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
                 ],
               ),
+            if (showCollage)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: [
+                  const Text(
+                    'Rounded Corners',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                  width: 300, // ✅ Same width as above
+                  child: Slider(
+                    min: 0.0,
+                    max: 50.0,
+                    divisions: 10,
+                    label: '${borderRadius.toInt()} px',
+                    value: borderRadius,
+                    onChanged: (value) {
+                      setState(() {
+                        borderRadius = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
 
               // Border color selection
               if (showCollage)
