@@ -64,6 +64,7 @@ class _HomePageState extends State<HomePage> {
   bool _dialogShown = false;
 
   Color selectedBorderColor = Colors.black;
+  double borderThickness = 8.0;
 
   @override
   void initState() {
@@ -128,7 +129,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget framedImage(String img) {
     BoxDecoration decoration = BoxDecoration(
-      border: Border.all(color: selectedBorderColor, width: 8),
+      border: Border.all(color: selectedBorderColor, width: borderThickness),
     );
 
     return Container(
@@ -212,14 +213,29 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(width: 10),
                   if (showCollage)
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          collageCreated = true;
-                        });
-                      },
-                      child: const Text('Create Collage'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Border Thickness',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Slider(
+                          min: 2.0,
+                          max: 20.0,
+                          divisions: 9,
+                          label: '${borderThickness.toInt()} px',
+                          value: borderThickness,
+                          onChanged: (value) {
+                            setState(() {
+                              borderThickness = value;
+                            });
+                          },
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
 
