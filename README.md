@@ -1,16 +1,18 @@
-# camorama
+Camorama is a fun and interactive Flutter Web app that allows users to capture photos from their webcam, customize them with borders and rounded corners, and create beautiful photo collages directly in the browser — no downloads or installations required.
 
-A new Flutter project.
+🚀 Features:
+🎥 Live Webcam Preview (via HTML <video> and Flutter integration)
+⏱ Countdown Timer before capturing a photo
+🖼 Image Selection & Highlighting with visual cues
+🧱 Collage Builder — select 3 images to create a custom layout
+🎨 Custom Borders
+Choose thickness
+Apply rounded corners
+Pick from black, white, or a custom color
+💾 Base64 Image Storage in browser memory
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+🛠 Built With:
+Flutter Web
+HTML5 <video> and <canvas>
+flutter_colorpicker for the custom color picker
+Web APIs via dart:html and dart:ui_web
