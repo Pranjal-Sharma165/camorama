@@ -18,3 +18,5 @@ flutter_colorpicker for the custom color picker
 Web APIs via dart:html and dart:ui_web
 
 Try out the latest changes!
+
+Upcoming changes include edit options for the image...
