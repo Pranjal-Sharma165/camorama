@@ -16,3 +16,5 @@ Flutter Web
 HTML5 <video> and <canvas>
 flutter_colorpicker for the custom color picker
 Web APIs via dart:html and dart:ui_web
+
+Try out the latest changes!
